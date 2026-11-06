@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة اختبار الكيمياء - الباب الثاني</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Cairo) -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        chemistry: {
+                            dark: '#0f172a',
+                            card: '#1e293b',
+                            accent: '#38bdf8',
+                            purple: '#a855f7'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Cairo', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .custom-radio:checked + label {
+            border-color: #38bdf8;
+            background-color: rgba(56, 189, 248, 0.15);
+        }
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; color: #000; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex flex-col justify-between">
+
+    <!-- Navbar Header -->
+    <header class="max-w-6xl mx-auto w-full mb-8">
+        <div class="glass-card rounded-2xl p-4 flex justify-between items-center shadow-2xl">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="bg-gradient-to-tr from-cyan-500 to-blue-600 p-3 rounded-xl text-white shadow-lg">
+                    <i class="fa-solid fa-vial-circle-check text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-white">منصة الكيمياء</h1>
+                    <p class="text-xs text-cyan-400">المعلمة : اماني منصور</p>
+                </div>
+            </div>
+
+            <!-- Dashboard Button -->
+            <button onclick="openTeacherAuthModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 shadow-md">
+                <i class="fa-solid fa-user-tie"></i>
+                <span>دخول المعلمة</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl mx-auto w-full flex-grow">
+
+        <!-- 1. LOGIN SCREEN -->
+        <div id="screen-login" class="glass-card rounded-3xl p-6 md:p-10 shadow-2xl transition-all duration-300">
+            <div class="text-center max-w-md mx-auto">
+                <div class="inline-block p-4 rounded-full bg-cyan-500/10 text-cyan-400 mb-4 border border-cyan-500/20">
+                    <i class="fa-solid fa-id-card-clip text-4xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">تسجيل دخول الطالب</h2>
+                <p id="login-subheading" class="text-gray-400 text-sm mb-6">يرجى الانتظار حتى تقوم المعلمة بفتح التسجيل وتحديد الإعدادات.</p>
+
+                <!-- Status Alert Box -->
+                <div id="login-alert" class="hidden mb-4 p-3 rounded-xl text-sm font-semibold text-right"></div>
+
+                <form id="login-form" onsubmit="handleStudentLogin(event)" class="space-y-4 text-right">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">اسم الطالب بالكامل</label>
+                        <input type="text" id="student-name" required disabled placeholder="أدخل اسمك هنا" 
+                            class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">رقم المعرف (Student ID)</label>
+                        <input type="number" id="student-id" min="1" required disabled placeholder="في انتظار تفعيل المعلمة..." 
+                            class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span id="student-id-hint" class="text-xs text-amber-400 mt-1 block">* التسجيل مغلق حالياً حتى يتم ضبطه من لوحة المعلمة.</span>
+                    </div>
+
+                    <button type="submit" id="start-exam-btn" disabled class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-cyan-500/20 transition duration-200 mt-4 flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span>بدء الامتحان الآن</span>
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 2. QUIZ SCREEN -->
+        <div id="screen-quiz" class="hidden glass-card rounded-3xl p-6 md:p-8 shadow-2xl">
+            <!-- Header bar of Quiz -->
+            <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-700 pb-4 mb-6">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-user-circle text-cyan-400"></i>
+                        <span id="quiz-student-display">...</span>
+                    </h3>
+                    <p class="text-xs text-gray-400">رقم التعريف: <span id="quiz-id-display" class="font-mono text-cyan-400"></span></p>
+                </div>
+                
+                <!-- Timer (40 Minutes) -->
+                <div class="bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl flex items-center gap-3">
+                    <i class="fa-solid fa-clock text-amber-400 animate-pulse"></i>
+                    <div>
+                        <div class="text-xs text-gray-400">الوقت المتبقي</div>
+                        <div id="quiz-timer" class="font-mono font-bold text-lg text-amber-400">40:00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Questions Form -->
+            <form id="quiz-form" onsubmit="handleQuizSubmit(event)">
+                <div id="questions-container" class="space-y-8">
+                    <!-- Dynamic Questions injected via JS -->
+                </div>
+
+                <!-- Submit Button -->
+                <div class="mt-8 border-t border-slate-700 pt-6 flex justify-end">
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-emerald-600/30 transition flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>تأكيد وإنهاء الاختبار</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 3. RESULT SCREEN FOR STUDENT -->
+        <div id="screen-result" class="hidden glass-card rounded-3xl p-6 md:p-10 shadow-2xl text-center">
+            <div class="max-w-xl mx-auto">
+                <div id="result-icon-box" class="w-20 h-20 rounded-full mx-auto flex items-center justify-center text-4xl mb-4 shadow-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    <i id="result-icon" class="fa-solid fa-award"></i>
+                </div>
+                <h2 class="text-3xl font-extrabold mb-1" id="result-status-title">تم تسليم الاختبار بنجاح</h2>
+                <p class="text-gray-400 text-sm mb-6" id="result-student-info">إليك ملخص نتيجتك وتقييم إجاباتك</p>
+
+                <!-- Score Badge & Summary Box -->
+                <div class="bg-slate-900/90 rounded-2xl p-6 border border-slate-700/80 mb-6 text-right space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <span class="text-gray-400 text-sm">اسم الطالب:</span>
+                        <span id="res-disp-name" class="font-bold text-white text-base"></span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <span class="text-gray-400 text-sm">رقم المعرف (ID):</span>
+                        <span id="res-disp-id" class="font-mono font-bold text-cyan-400"></span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <span class="text-gray-400 text-sm">الوقت المستغرق:</span>
+                        <span id="res-disp-time" class="font-mono font-bold text-amber-400"></span>
+                    </div>
+                    <div class="flex justify-between items-center pt-1">
+                        <span class="text-gray-300 font-bold text-base">الدرجة النهائية:</span>
+                        <span id="res-disp-score" class="font-bold text-2xl px-4 py-1 rounded-xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+                            0 / 20
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons for Student -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <button onclick="toggleStudentReview()" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i>
+                        <span>مراجعة الإجابات واكتشاف الأخطاء</span>
+                    </button>
+
+                    <button onclick="resetToLogin()" class="w-full bg-slate-800 hover:bg-slate-700 text-gray-200 font-semibold py-3.5 rounded-xl transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>خروج</span>
+                    </button>
+                </div>
+
+                <!-- STUDENT ERROR REVIEW CONTAINER -->
+                <div id="student-review-container" class="hidden text-right mt-6 pt-6 border-t border-slate-700 space-y-4">
+                    <h3 class="text-lg font-bold text-cyan-400 flex items-center gap-2 mb-4">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>مراجعة تفاصيل الأسئلة وإجاباتك:</span>
+                    </h3>
+                    <div id="student-review-list" class="space-y-4">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- TEACHER AUTHENTICATION MODAL -->
+    <div id="teacher-auth-modal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-md p-6 shadow-2xl text-right">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
+                <div class="flex items-center gap-2">
+                    <div class="bg-indigo-600/20 text-indigo-400 p-2 rounded-lg">
+                        <i class="fa-solid fa-lock text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">لوحة المعلمة</h3>
+                        <p class="text-xs text-gray-400">أدخل الرمز السري للدخول المباشر</p>
+                    </div>
+                </div>
+                <button onclick="closeTeacherAuthModal()" class="text-gray-400 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="auth-alert" class="hidden mb-4 p-3 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-semibold"></div>
+
+            <form onsubmit="handleTeacherLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">الرمز السري للمعلمة</label>
+                    <input type="password" id="teacher-passcode" required placeholder="أدخل الرمز السري..." 
+                        class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 font-mono tracking-widest text-center text-lg">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-600/30 transition">
+                    تأكيد والدخول للنتائج والإعدادات
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- TEACHER MAIN DASHBOARD MODAL -->
+    <div id="teacher-modal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden text-right">
+            
+            <!-- Dashboard Controls Header -->
+            <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-600/20 text-indigo-400 p-2.5 rounded-xl border border-indigo-500/30">
+                        <i class="fa-solid fa-chart-user text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">لوحة تحكم المعلمة</h3>
+                        <p class="text-xs text-gray-400">إدارة الامتحان ومتابعة الطلاب</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="printResults()" class="bg-slate-800 hover:bg-slate-700 text-gray-200 px-3 py-2 rounded-xl text-xs font-semibold border border-slate-700 transition flex items-center gap-1">
+                        <i class="fa-solid fa-print"></i> طباعة / تصدير
+                    </button>
+                    <button onclick="clearAllData()" class="bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold border border-rose-500/30 transition flex items-center gap-1">
+                        <i class="fa-solid fa-trash-can"></i> تصفير البيانات
+                    </button>
+                    <button onclick="closeTeacherModal()" class="text-gray-400 hover:text-white text-xl mr-2">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TEACHER CONTROL SETTINGS PANEL -->
+            <div class="p-4 bg-slate-950 border-b border-slate-800">
+                <form onsubmit="saveTeacherSettings(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">أقصى عدد للطلاب (Max Student ID)</label>
+                        <input type="number" id="setting-max-students" min="1" max="500" required placeholder="مثال: 30"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-300 mb-1">مدة الامتحان (بالدقائق)</label>
+                        <input type="number" id="setting-exam-duration" min="1" max="180" required placeholder="مثال: 40"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-xl text-xs md:text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>حفظ الإعدادات وتفعيل التسجيل</span>
+                        </button>
+                    </div>
+                    <div>
+                        <button type="button" onclick="resetSystemAndLock()" class="w-full bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white font-bold py-2 px-3 rounded-xl text-xs md:text-sm border border-amber-500/30 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-lock"></i>
+                            <span>إلغاء التفعيل وتصفير الإعدادات</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-3 gap-4 p-4 bg-slate-950/50 border-b border-slate-800 text-center">
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                    <div class="text-xs text-gray-400">إجمالي الطلاب المسجلين</div>
+                    <div id="stat-total" class="text-xl font-bold text-cyan-400">0 / 0</div>
+                </div>
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                    <div class="text-xs text-gray-400">متوسط الدرجات</div>
+                    <div id="stat-avg" class="text-xl font-bold text-emerald-400">0</div>
+                </div>
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                    <div class="text-xs text-gray-400">أعلى درجة</div>
+                    <div id="stat-high" class="text-xl font-bold text-amber-400">0</div>
+                </div>
+            </div>
+
+            <!-- Table View -->
+            <div id="print-area" class="p-6 overflow-y-auto flex-grow">
+                <table class="w-full text-sm text-right">
+                    <thead class="bg-slate-950 text-gray-400 text-xs uppercase border-b border-slate-800">
+                        <tr>
+                            <th class="py-3 px-4">رقم المعرف (ID)</th>
+                            <th class="py-3 px-4">اسم الطالب</th>
+                            <th class="py-3 px-4">الدرجة</th>
+                            <th class="py-3 px-4">الوقت المستغرق</th>
+                            <th class="py-3 px-4">تاريخ التسليم</th>
+                            <th class="py-3 px-4 text-center">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacher-table-body" class="divide-y divide-slate-800/60">
+                        <!-- Dynamic rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEACHER DETAILS MODAL FOR A SPECIFIC STUDENT -->
+    <div id="details-modal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md z-[60] flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden text-right">
+            <!-- Header -->
+            <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+                <div>
+                    <h3 id="details-student-name" class="text-lg font-bold text-white">تفاصيل إجابات الطالب</h3>
+                    <p id="details-student-meta" class="text-xs text-cyan-400">ID: 0 | الدرجة: 0/20</p>
+                </div>
+                <button onclick="closeDetailsModal()" class="text-gray-400 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <!-- Body -->
+            <div id="details-modal-body" class="p-6 overflow-y-auto space-y-4">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // 20 ADVANCED HIGH-LEVEL CHEMISTRY QUESTIONS (Unit 2: Qualitative Analysis & Anions/Cations)
+        const chemistryQuestions = [
+            { 
+                id: 1, 
+                text: "عند إضافة حمض الهيدروكلوريك المخفف إلى ملح صلب صيغته Na₂X، تصاعد غاز (A) عديم اللون يسبب اسوداد ورقة مبللة بـ (CH₃COO)₂Pb. وعند إضافة محلول AgNO₃ إلى محلول نفس الملح يتكون راسب (B). ما هما (A) و (B) على الترتيب؟", 
+                options: ["SO₂ ، Ag₂SO₃", "H₂S ، Ag₂S", "CO₂ ، CaCO₃", "NO ، AgNO₂"], 
+                correct: 1 
+            },
+            { 
+                id: 2, 
+                text: "مخلوط صلب يحتوي على (كربونات صوديوم + كبريتات باريوم). أي الخطوات التالية هي الأفضل والأسرع لفصل المكونين والحصول على كل منهما في صورة ناتجة صلبة ونقية؟", 
+                options: [
+                    "الذوبان في الماء ثم الترشيح والتبخير", 
+                    "إضافة HCl مخفف ثم الترشيح وتجفيف الراسب ثم ترسيب الصوديوم", 
+                    "الذوبان في الماء ثم إضافة AgNO₃", 
+                    "الذوبان في H₂SO₄ مركز ثم التبخير"
+                ], 
+                correct: 1 
+            },
+            { 
+                id: 3, 
+                text: "أضيف حمض الكبريتيك المركز إلى ملحين صلبين (X) و (Y). مع (X) تصاعدت أبخرة برتقالية حمراء تصفر ورقة مبللة بالنشا، ومع (Y) تصاعدت أبخرة بنفسجية تزرق ورقة مبللة بالنشا. أي العبارات التالية صحيحة بالنسبة للأنيونين؟", 
+                options: [
+                    "أنيون X هو اليوديد وأنيون Y هو البروميد", 
+                    "أنيون X يتأكسد أسهل من أنيون Y", 
+                    "أنيون Y أقوى كعامل مختزل من أنيون X في هذا التفاعل", 
+                    "كلا الأنيونين يتبعان مجموعة كلوريد الباريوم"
+                ], 
+                correct: 2 
+            },
+            { 
+                id: 4, 
+                text: "عند كشف تجربة الحلقة البنية لأنيون النيترات NO₃⁻، ما هو التغير في عدد أكسدة الحديد في المركب الأساسي الناتج من صيغة المعقد [Fe(H₂O)₅(NO)]SO₄؟", 
+                options: ["يتحول الحديد من +2 إلى +1", "يتحول الحديد من +3 إلى +2", "يبقى عدد أكسدة الحديد +2 كما هو", "يكون عدد أكسدة الحديد في المعقد +1"], 
+                correct: 3 
+            },
+            { 
+                id: 5, 
+                text: "عينة ناتجة من تفاعل حمض HCl المخفف مع ملح ثيوكبريتات الصوديوم Na₂S₂O₃. عند ترشيح المحلول وفصل المادة الصلبة المتبقية مع إضافة محلول K₂Cr₂O₇ المحمضة للغاز المتصاعد، ما التغير المشاهد للغاز والراسب؟", 
+                options: [
+                    "غاز يتحول للأحمر وراسب أبيض", 
+                    "غاز يخضر المحمضة وراسب أصفر معلق", 
+                    "غاز يسود الورقة وراسب بني محمر", 
+                    "غاز يتسامى وراسب أسود"
+                ], 
+                correct: 1 
+            },
+            { 
+                id: 6, 
+                text: "عند إضافة وفيرة من محلول NaOH إلى محلول يحتوي على خليط من أيونات (Fe²⁺, Fe³⁺, Al³⁺)، ثم ترشيح الراسب الناتج. المادة الصلبة المتبقية على ورقة الترشيح تتكون من:", 
+                options: [
+                    "Fe(OH)₂ فقط", 
+                    "Fe(OH)₃ و Al(OH)₃", 
+                    "Fe(OH)₂ و Fe(OH)₃ فقط", 
+                    "NaAlO₂ و Fe(OH)₃"
+                ], 
+                correct: 2 
+            },
+            { 
+                id: 7, 
+                text: "تم التمييز بين راسبين أبيضين (أحدهما فوسفات باريوم والآخر كبريتات باريوم) باستخدام حمض HCl المخفف. أسباب الذوبان/عدم الذوبان ترجع إلى أن:", 
+                options: [
+                    "حمض الفوسفوريك أضعف وأكثر تطايراً من حمض الهيدروكلوريك بينما حمض الكبريتيك أقوى وأثبت", 
+                    "كبريتات الباريوم مركب الكتروليتي قوي جداً", 
+                    "فوسفات الباريوم تذوب في الماء أصلاً", 
+                    "حمض HCl لا يتفاعل إطلاقاً مع أملاح الباريوم"
+                ], 
+                correct: 0 
+            },
+            { 
+                id: 8, 
+                text: "ثلاثة محاليل لأملاح فضة تم إضافتها إلى ثلاثة أنيونات مختلفة: فنتج راسب أصفر يذوب في النشادر المركز (A)، وراسب أصفر لا يذوب في النشادر (B)، وراسب أبيض يذوب بسرعة في النشادر (C). ما هي الأنيونات A و B و C؟", 
+                options: [
+                    "A: فوسفات ، B: يوديد ، C: كلوريد", 
+                    "A: يوديد ، B: فوسفات ، C: بروميد", 
+                    "A: كلوريد ، B: بروميد ، C: يوديد", 
+                    "A: فوسفات ، B: كلوريد ، C: يوديد"
+                ], 
+                correct: 0 
+            },
+            { 
+                id: 9, 
+                text: "كاتيون ينتمي للمجموعة التحليلية الخامسة، عند تعريض ملحه الجاف للهب بنزن غير المضيء يكتسب اللهب لوناً أحمر طوبياً، وحين إضافة محلول (NH₄)₂CO₃ لمحلول ملحه يتكون راسب أبيض يذوب في حمض الكربونيك. ما هو الكاتيون؟", 
+                options: ["Ba²⁺", "Ca²⁺", "Cu²⁺", "Fe²⁺"], 
+                correct: 1 
+            },
+            { 
+                id: 10, 
+                text: "عند حرق 1 مول من كبريتيد الهيدروجين H₂S في كمية محدودة من الأكسجين لتمريره على محلول أكسدة (برمنجنات البوتاسيوم المحمضة)، أي التغيرات الكيميائية التالية تحدث للأيون الانتقالي في البرمنجنات؟", 
+                options: [
+                    "يختزل Mn⁺⁷ إلى Mn⁺² ويزول اللون البنفسجي", 
+                    "يتحول Mn⁺² إلى Mn⁺⁷ ويكتسب لوناً وردياً", 
+                    "يتأكسد Mn⁺⁴ إلى Mn⁺⁶", 
+                    "لا يحدث تفاعل أكسدة واختزال"
+                ], 
+                correct: 0 
+            },
+            { 
+                id: 11, 
+                text: "أي من أزواج الكاتيونات التالية يمكن ترسيب أحدهما دون الآخر في صورة كبريتيد عند التمرير لغاز H₂S في وسط حمضي (HCl مخفف)؟", 
+                options: ["Cu²⁺ و Na⁺", "Cu²⁺ و Pb²⁺", "Fe²⁺ و Fe³⁺", "K⁺ و Na⁺"], 
+                correct: 0 
+            },
+            { 
+                id: 12, 
+                text: "محلول يحتوي على خليط من أيونات Cl⁻ و SO₄²⁻. ما هو الكاشف المناسب لفصل أيون الكبريتات أولاً دون ترسيب أيون الكلوريد؟", 
+                options: ["محلول AgNO₃", "محلول Ba(NO₃)₂", "محلول Na₂CO₃", "محلول NH₄OH"], 
+                correct: 1 
+            },
+            { 
+                id: 13, 
+                text: "تفاعل ملح نيتريت الصوديوم مع محلول KMnO₄ المحمضة بحمض H₂SO₄ المركز. كم عدد مولات نيتريت الصوديوم اللازمة لاختزال 2 مول من برمنجنات البوتاسيوم تماماً وفق المعادلة الموزونة؟", 
+                options: ["2 مول", "3 مول", "5 مولات", "10 مولات"], 
+                correct: 2 
+            },
+            { 
+                id: 14, 
+                text: "تم إحداث كشف تأكيدي لأنيون الكبريتيت (SO₃²⁻) باستخدام محلول AgNO₃، تكون راسب أبيض (X). وعند تسخين هذا الراسب (X) هادئاً يتحول إلى اللون (Y). ما هما X و Y؟", 
+                options: ["X: Ag₂SO₄ ، Y: أصفر", "X: Ag₂SO₃ ، Y: أسود", "X: Ag₂S ، Y: أبيض", "X: AgCl ، Y: بنفسجي"], 
+                correct: 1 
+            },
+            { 
+                id: 15, 
+                text: "إحدى عينات أملاح الحديد (X) عند إضافة محلول NH₄OH إليها تكون راسب بني محمر، وعند إضافة حمض H₂SO₄ المركز للملح الصلب تتصاعد أبخرة بني أحمر تزداد عند إضافة خراطة النحاس. صيغة الملح X هي:", 
+                options: ["FeCl₂", "Fe(NO₃)₃", "FeSO₄", "Fe(NO₂)" ], 
+                correct: 1 
+            },
+            { 
+                id: 16, 
+                text: "عند إضافة محلول هيدروكسيد الأمونيوم (NH₄OH) بالتنقيط حتى الزيادة إلى محلول يحتوي على كاتيونات Cu²⁺ و Al³⁺، فإن التغير الملاحظ في شكل المحلول والراسب هو:", 
+                options: [
+                    "يتكون راسب أبيض وراسب أزرق ويذوب كلاهما في الزيادة", 
+                    "يترسب Al(OH)₃ الأبيض ولا يذوب في الزيادة من NH₄OH، بينما يدخل Cu²⁺ في معقد ذائب أزرق غامق", 
+                    "يختفي الراسب الأبيض تماماً بينما يتبقى الراسب الأكوا", 
+                    "لا يتكون أي راسب في المحلولين"
+                ], 
+                correct: 1 
+            },
+            { 
+                id: 17, 
+                text: "عنصر انتقالي ينتهي بالتوزيع الإلكتروني 3d⁵ في حالته التأكسدية +3. عند إضافة هيدروكسيد الصوديوم إلى محلول كلوريده، يتكون راسب ذو لون:", 
+                options: ["أبيض يخضر", "بني محمر", "أزرق يتأسود بالتسخين", "أصفر كبريتي"], 
+                correct: 1 
+            },
+            { 
+                id: 18, 
+                text: "أي من المواد التالية تستخدم لتمييز التأكيد بين أنيوني الكربونات والبيكربونات بدون الحاجة للتسخين المباشر في الخطوة الأولى؟", 
+                options: ["حمض HCl المخفف", "محلول MgSO₄", "محلول NaOH", "محلول K₂Cr₂O₇"], 
+                correct: 1 
+            },
+            { 
+                id: 19, 
+                text: "غاز عديم اللون (A) عند تعرضه للهواء الجوي عند فوهة الأنبوبة يتحول إلى غاز (B) بني محمر. الغاز A ي نتج من تفاعل حمض HCl المخفف مع ملح تحتوي صيغته على أنيون:", 
+                options: ["النيترات NO₃⁻", "النيتريت NO₂⁻", "الكبريتيد S²⁻", "الكلوريد Cl⁻"], 
+                correct: 1 
+            },
+            { 
+                id: 20, 
+                text: "عند إضافة حمض H₂SO₄ المخفف إلى كربونات الكالسيوم الصلبة الصلبة، يتوقف التفاعل سريعاً بعد فترة وجيزة. السبب العلمي الأكثر دقة لذلك هو:", 
+                options: [
+                    "استهلاك كامل كمية الكربونات", 
+                    "تكون طبقة من كبريتات الكالسيوم CaSO₄ الشحيحة الذوبان تغطي سطح الملح وتمنع استمرار الحمض", 
+                    "تكون غاز يعطل التفاعل", 
+                    "ضعف حمض الكبريتيك المخفف"
+                ], 
+                correct: 1 
+            }
+        ];
+
+        // TEACHER SECRET PASSCODE
+        const TEACHER_PASSCODE = "505050";
+
+        // GLOBAL APP STATE
+        let currentStudent = null;
+        let lastSubmission = null;
+        let timerInterval = null;
+        let examDurationMinutes = 40;
+        let maxStudentId = 0;
+        let timeRemaining = 0;
+        let secondsSpent = 0;
+
+        // INITIAL LOAD & SETTINGS MANAGEMENT
+        window.addEventListener('DOMContentLoaded', () => {
+            loadTeacherSettings();
+            applyLoginUIState();
+        });
+
+        function getTeacherSettings() {
+            return JSON.parse(localStorage.getItem('chem_settings_v1') || 'null');
+        }
+
+        function loadTeacherSettings() {
+            const settings = getTeacherSettings();
+            if (settings) {
+                maxStudentId = parseInt(settings.maxStudentId) || 0;
+                examDurationMinutes = parseInt(settings.examDuration) || 40;
+            }
+        }
+
+        function saveTeacherSettings(e) {
+            e.preventDefault();
+            const maxVal = parseInt(document.getElementById('setting-max-students').value);
+            const durVal = parseInt(document.getElementById('setting-exam-duration').value);
+
+            if (isNaN(maxVal) || maxVal < 1) {
+                alert("يرجى إدخال عدد طلاب صحيح.");
+                return;
+            }
+            if (isNaN(durVal) || durVal < 1) {
+                alert("يرجى إدخال مدة امتحان صحيحة.");
+                return;
+            }
+
+            maxStudentId = maxVal;
+            examDurationMinutes = durVal;
+
+            localStorage.setItem('chem_settings_v1', JSON.stringify({
+                maxStudentId: maxStudentId,
+                examDuration: examDurationMinutes
+            }));
+
+            applyLoginUIState();
+            renderTeacherTable();
+            alert("تم حفظ الإعدادات بنجاح وتحديث نظام التسجيل للطالبات والطلاب.");
+        }
+
+        function applyLoginUIState() {
+            const nameInput = document.getElementById('student-name');
+            const idInput = document.getElementById('student-id');
+            const submitBtn = document.getElementById('start-exam-btn');
+            const hintSpan = document.getElementById('student-id-hint');
+            const subHeading = document.getElementById('login-subheading');
+
+            if (maxStudentId > 0) {
+                nameInput.disabled = false;
+                idInput.disabled = false;
+                submitBtn.disabled = false;
+                idInput.max = maxStudentId;
+                idInput.placeholder = `أدخل كود الطالب (من 1 إلى ${maxStudentId})`;
+                hintSpan.textContent = `* مسموح التسجيل بالأرقام من 1 إلى ${maxStudentId} فقط.`;
+                hintSpan.className = "text-xs text-cyan-400 mt-1 block font-semibold";
+                subHeading.textContent = `يرجى إدخال اسمك ورقم التعريف (من 1 إلى ${maxStudentId}) | مدة الامتحان: ${examDurationMinutes} دقيقة`;
+            } else {
+                nameInput.disabled = true;
+                idInput.disabled = true;
+                submitBtn.disabled = true;
+                idInput.placeholder = "التسجيل معطل حالياً";
+                hintSpan.textContent = "* التسجيل مغلق حالياً حتى تقوم المعلمة بتحديد عدد الطلاب والمدة من اللوحة.";
+                hintSpan.className = "text-xs text-amber-400 mt-1 block font-semibold";
+                subHeading.textContent = "يرجى الانتظار حتى تقوم المعلمة بفتح التسجيل وتحديد الإعدادات.";
+            }
+        }
+
+        // LOCAL STORAGE HELPERS
+        function getSubmissions() {
+            return JSON.parse(localStorage.getItem('chem_submissions_v2') || '[]');
+        }
+
+        function saveSubmission(data) {
+            const list = getSubmissions();
+            list.push(data);
+            localStorage.setItem('chem_submissions_v2', JSON.stringify(list));
+        }
+
+        // --- STUDENT LOGIN LOGIC ---
+        function handleStudentLogin(e) {
+            e.preventDefault();
+            const alertBox = document.getElementById('login-alert');
+
+            if (maxStudentId <= 0) {
+                showAlert(alertBox, "التسجيل مغلق! يجب أن تقوم المعلمة بتحديد الإعدادات أولاً.", "bg-amber-500/20 text-amber-300 border border-amber-500/30");
+                return;
+            }
+
+            const name = document.getElementById('student-name').value.trim();
+            const id = parseInt(document.getElementById('student-id').value);
+
+            // Dynamic ID Validation
+            if (isNaN(id) || id < 1 || id > maxStudentId) {
+                showAlert(alertBox, `عذراً، رقم المعرف يجب أن يكون من 1 إلى ${maxStudentId} فقط حسب تحديد المعلمة.`, "bg-rose-500/20 text-rose-300 border border-rose-500/30");
+                return;
+            }
+
+            // Check duplicate ID
+            const submissions = getSubmissions();
+            const exists = submissions.some(item => item.studentId === id);
+
+            if (exists) {
+                showAlert(alertBox, `عذراً! رقم المعرف (${id}) أجرى الامتحان سابقاً. لا يمكن إعادة الاختبار بنسخ الكود نفسه.`, "bg-rose-500/20 text-rose-300 border border-rose-500/30");
+                return;
+            }
+
+            currentStudent = { name, id };
+            startQuiz();
+        }
+
+        function showAlert(element, message, classes) {
+            element.className = `mb-4 p-3 rounded-xl text-sm font-semibold text-right ${classes}`;
+            element.textContent = message;
+            element.classList.remove('hidden');
+        }
+
+        // --- QUIZ RENDER & TIMER ---
+        function startQuiz() {
+            document.getElementById('screen-login').classList.add('hidden');
+            document.getElementById('screen-quiz').classList.remove('hidden');
+
+            document.getElementById('quiz-student-display').textContent = currentStudent.name;
+            document.getElementById('quiz-id-display').textContent = currentStudent.id;
+
+            renderQuestions();
+            startTimer();
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questions-container');
+            container.innerHTML = '';
+
+            chemistryQuestions.forEach((q, index) => {
+                const qDiv = document.createElement('div');
+                qDiv.className = "bg-slate-900/60 border border-slate-800 rounded-2xl p-5 md:p-6 text-right";
+                
+                let optionsHTML = '';
+                q.options.forEach((opt, optIndex) => {
+                    const radioId = `q_${q.id}_opt_${optIndex}`;
+                    optionsHTML += `
+                        <div class="relative">
+                            <input type="radio" id="${radioId}" name="question_${q.id}" value="${optIndex}" class="custom-radio hidden peer" required>
+                            <label for="${radioId}" class="block p-3.5 px-4 bg-slate-950/80 border border-slate-800 rounded-xl text-sm cursor-pointer hover:border-slate-600 transition peer-checked:border-cyan-500 peer-checked:bg-cyan-500/10">
+                                <span class="ml-2 font-mono text-xs text-gray-500">${['أ', 'ب', 'ج', 'د'][optIndex]})</span>
+                                <span>${opt}</span>
+                            </label>
+                        </div>
+                    `;
+                });
+
+                qDiv.innerHTML = `
+                    <div class="flex items-start gap-3 mb-4">
+                        <span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-xs font-bold px-3 py-1 rounded-lg mt-0.5">سؤال ${index + 1}</span>
+                        <h4 class="text-base font-semibold text-white leading-relaxed">${q.text}</h4>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        ${optionsHTML}
+                    </div>
+                `;
+                container.appendChild(qDiv);
+            });
+        }
+
+        function startTimer() {
+            timeRemaining = examDurationMinutes * 60;
+            secondsSpent = 0;
+
+            const timerDisplay = document.getElementById('quiz-timer');
+            timerDisplay.textContent = `${examDurationMinutes.toString().padStart(2, '0')}:00`;
+
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                secondsSpent++;
+
+                const mins = Math.floor(timeRemaining / 60);
+                const secs = timeRemaining % 60;
+                timerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    alert("انتهى الوقت المحدد للاختبار! سيتم تسليم إجاباتك تلقائياً.");
+                    document.getElementById('quiz-form').requestSubmit();
+                }
+            }, 1000);
+        }
+
+        // --- QUIZ SUBMISSION & STUDENT RESULT SCREEN ---
+        function handleQuizSubmit(e) {
+            e.preventDefault();
+            clearInterval(timerInterval);
+
+            const formData = new FormData(e.target);
+            let score = 0;
+            let answers = [];
+
+            chemistryQuestions.forEach(q => {
+                const selected = formData.get(`question_${q.id}`);
+                const selectedIndex = selected !== null ? parseInt(selected) : null;
+                const isCorrect = selectedIndex === q.correct;
+                
+                if (isCorrect) score++;
+
+                answers.push({
+                    questionId: q.id,
+                    questionText: q.text,
+                    options: q.options,
+                    selectedOption: selectedIndex,
+                    correctOption: q.correct,
+                    isCorrect: isCorrect
+                });
+            });
+
+            const minsSpent = Math.floor(secondsSpent / 60);
+            const secsSpent = secondsSpent % 60;
+            const formattedTime = `${minsSpent} د و ${secsSpent} ث`;
+
+            lastSubmission = {
+                studentId: currentStudent.id,
+                studentName: currentStudent.name,
+                score: score,
+                total: chemistryQuestions.length,
+                timeSpent: formattedTime,
+                submittedAt: new Date().toLocaleString('ar-EG'),
+                answers: answers
+            };
+
+            saveSubmission(lastSubmission);
+            showResultsScreen(lastSubmission);
+        }
+
+        function showResultsScreen(data) {
+            document.getElementById('screen-quiz').classList.add('hidden');
+            document.getElementById('screen-result').classList.remove('hidden');
+
+            document.getElementById('res-disp-name').textContent = data.studentName;
+            document.getElementById('res-disp-id').textContent = `#${data.studentId}`;
+            document.getElementById('res-disp-time').textContent = data.timeSpent;
+            document.getElementById('res-disp-score').textContent = `${data.score} / ${data.total}`;
+
+            // Reset review container state
+            document.getElementById('student-review-container').classList.add('hidden');
+            buildStudentReviewList(data);
+        }
+
+        // --- STUDENT ERROR REVIEW GENERATOR ---
+        function buildStudentReviewList(data) {
+            const container = document.getElementById('student-review-list');
+            container.innerHTML = '';
+
+            data.answers.forEach((ans, idx) => {
+                const card = document.createElement('div');
+                card.className = `p-4 md:p-5 rounded-2xl border text-sm text-right transition ${ans.isCorrect ? 'bg-emerald-950/20 border-emerald-500/30' : 'bg-rose-950/20 border-rose-500/30'}`;
+
+                const selectedText = ans.selectedOption !== null ? ans.options[ans.selectedOption] : 'لم تشر إلى إجابة';
+                const correctText = ans.options[ans.correctOption];
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="font-bold text-white text-base">
+                            <span class="text-cyan-400 font-mono">س${idx + 1}:</span> ${ans.questionText}
+                        </div>
+                        <span class="text-xs px-3 py-1 rounded-lg font-bold shrink-0 ${ans.isCorrect ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+                            ${ans.isCorrect ? '<i class="fa-solid fa-check ml-1"></i> إجابة صحيحة' : '<i class="fa-solid fa-xmark ml-1"></i> إجابة خاطئة'}
+                        </span>
+                    </div>
+
+                    <div class="space-y-2 bg-slate-900/80 p-3.5 rounded-xl border border-slate-800 text-xs md:text-sm">
+                        <div class="flex items-center gap-2 ${ans.isCorrect ? 'text-emerald-300' : 'text-rose-300'}">
+                            <span class="font-semibold text-gray-400">إجابتك التي اخترتها:</span>
+                            <span class="font-bold">${selectedText}</span>
+                        </div>
+
+                        ${!ans.isCorrect ? `
+                            <div class="flex items-center gap-2 text-emerald-400 pt-1 border-t border-slate-800/80">
+                                <span class="font-semibold text-gray-400">الإجابة الصحيحة من كتاب الوزارة:</span>
+                                <span class="font-bold text-emerald-400">${correctText}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleStudentReview() {
+            const container = document.getElementById('student-review-container');
+            container.classList.toggle('hidden');
+            if (!container.classList.contains('hidden')) {
+                container.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function resetToLogin() {
+            currentStudent = null;
+            lastSubmission = null;
+            document.getElementById('login-form').reset();
+            document.getElementById('login-alert').classList.add('hidden');
+            document.getElementById('screen-result').classList.add('hidden');
+            document.getElementById('screen-login').classList.remove('hidden');
+        }
+
+        // --- TEACHER AUTH & DASHBOARD LOGIC ---
+        function openTeacherAuthModal() {
+            document.getElementById('teacher-auth-modal').classList.remove('hidden');
+            document.getElementById('auth-alert').classList.add('hidden');
+            document.getElementById('teacher-passcode').value = '';
+        }
+
+        function closeTeacherAuthModal() {
+            document.getElementById('teacher-auth-modal').classList.add('hidden');
+        }
+
+        function handleTeacherLogin(e) {
+            e.preventDefault();
+            const passcode = document.getElementById('teacher-passcode').value.trim();
+            const alertBox = document.getElementById('auth-alert');
+
+            if (passcode === TEACHER_PASSCODE) {
+                closeTeacherAuthModal();
+                openTeacherModal();
+            } else {
+                alertBox.textContent = "الرمز السري غير صحيح! حاول مرة أخرى.";
+                alertBox.classList.remove('hidden');
+            }
+        }
+
+        function openTeacherModal() {
+            document.getElementById('teacher-modal').classList.remove('hidden');
+            
+            // Populate teacher settings fields
+            document.getElementById('setting-max-students').value = maxStudentId || '';
+            document.getElementById('setting-exam-duration').value = examDurationMinutes || 40;
+
+            renderTeacherTable();
+        }
+
+        function closeTeacherModal() {
+            document.getElementById('teacher-modal').classList.add('hidden');
+        }
+
+        function renderTeacherTable() {
+            const submissions = getSubmissions();
+            const tbody = document.getElementById('teacher-table-body');
+            tbody.innerHTML = '';
+
+            document.getElementById('stat-total').textContent = `${submissions.length} / ${maxStudentId || 0}`;
+            
+            if (submissions.length > 0) {
+                const totalScore = submissions.reduce((acc, curr) => acc + curr.score, 0);
+                const avg = (totalScore / submissions.length).toFixed(1);
+                const highest = Math.max(...submissions.map(s => s.score));
+
+                document.getElementById('stat-avg').textContent = `${avg} / 20`;
+                document.getElementById('stat-high').textContent = `${highest} / 20`;
+            } else {
+                document.getElementById('stat-avg').textContent = `0`;
+                document.getElementById('stat-high').textContent = `0`;
+            }
+
+            if (submissions.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-8 text-gray-500">لا توجد نتائج مسجلة حتى الآن.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            submissions.sort((a, b) => a.studentId - b.studentId);
+
+            submissions.forEach(sub => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/50 transition";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-mono font-bold text-cyan-400">#${sub.studentId}</td>
+                    <td class="py-3 px-4 font-semibold text-white">${sub.studentName}</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${sub.score >= 10 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'}">
+                            ${sub.score} / ${sub.total}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-xs font-mono text-amber-400">${sub.timeSpent}</td>
+                    <td class="py-3 px-4 text-xs text-gray-400">${sub.submittedAt}</td>
+                    <td class="py-3 px-4 text-center">
+                        <button onclick="viewStudentDetails(${sub.studentId})" class="bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white px-3 py-1.5 rounded-lg text-xs transition border border-indigo-500/30">
+                            <i class="fa-solid fa-eye ml-1"></i> التفاصيل
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function viewStudentDetails(studentId) {
+            const submissions = getSubmissions();
+            const studentData = submissions.find(s => s.studentId === studentId);
+
+            if (!studentData) return;
+
+            document.getElementById('details-student-name').textContent = `إجابات الطالب: ${studentData.studentName}`;
+            document.getElementById('details-student-meta').textContent = `ID المعرف: #${studentData.studentId} | الدرجة: ${studentData.score} / ${studentData.total}`;
+
+            const container = document.getElementById('details-modal-body');
+            container.innerHTML = '';
+
+            studentData.answers.forEach((ans, idx) => {
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-xl border text-sm ${ans.isCorrect ? 'bg-emerald-950/20 border-emerald-500/30' : 'bg-rose-950/20 border-rose-500/30'}`;
+
+                const selectedText = ans.selectedOption !== null ? ans.options[ans.selectedOption] : 'لم يتم الإجابة';
+                const correctText = ans.options[ans.correctOption];
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-2 mb-2">
+                        <div class="font-bold text-white">س${idx + 1}: ${ans.questionText}</div>
+                        <span class="text-xs px-2 py-0.5 rounded font-bold ${ans.isCorrect ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">
+                            ${ans.isCorrect ? 'إجابة صحيحة' : 'إجابة خاطئة'}
+                        </span>
+                    </div>
+                    <div class="space-y-1 text-xs">
+                        <div class="${ans.isCorrect ? 'text-emerald-300' : 'text-rose-300'}">
+                            <span class="font-semibold text-gray-400">إجابة الطالب:</span> ${selectedText}
+                        </div>
+                        ${!ans.isCorrect ? `
+                            <div class="text-emerald-400">
+                                <span class="font-semibold text-gray-400">الإجابة الصحيحة:</span> ${correctText}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.getElementById('details-modal').classList.remove('hidden');
+        }
+
+        function closeDetailsModal() {
+            document.getElementById('details-modal').classList.add('hidden');
+        }
+
+        function clearAllData() {
+            if (confirm("هل أنت متأكدة من تصفير كافة نتائج وإجابات الطلاب المسجلين؟")) {
+                localStorage.removeItem('chem_submissions_v2');
+                renderTeacherTable();
+                alert("تم مسح جميع نتائج الطلاب بنجاح.");
+            }
+        }
+
+        function resetSystemAndLock() {
+            if (confirm("هل أنت متأكدة من تصفير الإعدادات وإغلاق التسجيل نهائياً على كافة الطلاب حتى إعادة ضبطها؟")) {
+                localStorage.removeItem('chem_settings_v1');
+                localStorage.removeItem('chem_submissions_v2');
+                maxStudentId = 0;
+                examDurationMinutes = 40;
+                
+                document.getElementById('setting-max-students').value = '';
+                document.getElementById('setting-exam-duration').value = '';
+
+                applyLoginUIState();
+                renderTeacherTable();
+                alert("تم تصفير النظام بالكامل وإعادة خانة تسجيل الدخول للطلاب إلى الحالة المغلقة.");
+            }
+        }
+
+        function printResults() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
